@@ -1,13 +1,14 @@
 {
   "experimentalServices": {
     "frontend": {
-      "root": "la-gazette-ai/frontend",
+      "entrypoint": "la-gazette-ai/frontend",
       "routePrefix": "/",
       "framework": "nextjs"
     },
     "backend": {
-      "root": "la-gazette-ai/backend",
-      "routePrefix": "/_/backend"
+      "entrypoint": "la-gazette-ai/backend/api/main.py",
+      "routePrefix": "/_/backend",
+      "framework": "python"
     }
   }
 }
