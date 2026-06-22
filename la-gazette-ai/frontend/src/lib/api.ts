@@ -6,7 +6,28 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // API Configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const getApiBaseUrl = () => {
+    // If NEXT_PUBLIC_API_URL is explicitly set, use it.
+    if (process.env.NEXT_PUBLIC_API_URL) {
+        return process.env.NEXT_PUBLIC_API_URL;
+    }
+    
+    // If running on Vercel (server side or client side)
+    const vercelUrl = process.env.NEXT_PUBLIC_VERCEL_URL || process.env.VERCEL_URL;
+    if (vercelUrl) {
+        return `https://${vercelUrl}/_/backend`;
+    }
+    
+    // If running in browser (client side)
+    if (typeof window !== "undefined") {
+        return "/_/backend";
+    }
+    
+    // Local fallback
+    return "http://localhost:8000";
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 // Types
 export interface SearchFilters {
