@@ -5,6 +5,8 @@
 !la-gazette-ai/
 !venv/
 !.gitignore
+!vercel.json
+
 
 # Ignore heavy/generated items inside la-gazette-ai
 la-gazette-ai/backend/workers/ocr_output/
