@@ -1,0 +1,24 @@
+# Ignore python virtual environments
+la-gazette-ai/backend/venv/
+la-gazette-ai/backend/venv-312/
+venv/
+
+# Ignore raw data files and PDFs
+la-gazette-ai/backend/workers/ocr_pdfs/
+la-gazette-ai/backend/workers/ocr_output/
+la-gazette-ai/backend/workers/2024/
+la-gazette-ai/backend/workers/test_ocr.pdf
+
+# Ignore node modules and build outputs
+la-gazette-ai/frontend/node_modules/
+la-gazette-ai/frontend/.next/
+la-gazette-ai/frontend/out/
+
+# Ignore logs and caches
+*.log
+**/__pycache__/
+.DS_Store
+
+# Ignore local environment files
+**/.env
+**/.env.local

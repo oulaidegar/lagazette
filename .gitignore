@@ -5,6 +5,7 @@
 !la-gazette-ai/
 !venv/
 !.gitignore
+!.vercelignore
 !vercel.json
 
 
