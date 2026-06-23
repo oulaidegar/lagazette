@@ -3,6 +3,10 @@ la-gazette-ai/backend/venv/
 la-gazette-ai/backend/venv-312/
 venv/
 
+# Ignore the 14 GB raw data folder
+La Gazette/
+"La Gazette"/
+
 # Ignore raw data files and PDFs
 la-gazette-ai/backend/workers/ocr_pdfs/
 la-gazette-ai/backend/workers/ocr_output/
