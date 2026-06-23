@@ -87,6 +87,7 @@ async def root():
 async def debug_env():
     import os
     import traceback
+    import importlib.metadata
     
     init_error = None
     try:
@@ -97,6 +98,13 @@ async def debug_env():
         init_status = "failed"
         init_error = f"{type(e).__name__}: {str(e)}\n{traceback.format_exc()}"
         
+    versions = {}
+    for pkg in ["httpx", "supabase", "gotrue", "postgrest", "fastapi"]:
+        try:
+            versions[pkg] = importlib.metadata.version(pkg)
+        except Exception:
+            versions[pkg] = "not found"
+            
     return {
         "supabase_url_exists": os.getenv("SUPABASE_URL") is not None and len(os.getenv("SUPABASE_URL").strip()) > 0,
         "supabase_service_key_exists": os.getenv("SUPABASE_SERVICE_KEY") is not None and len(os.getenv("SUPABASE_SERVICE_KEY").strip()) > 0,
@@ -104,7 +112,8 @@ async def debug_env():
         "next_public_supabase_url_exists": os.getenv("NEXT_PUBLIC_SUPABASE_URL") is not None and len(os.getenv("NEXT_PUBLIC_SUPABASE_URL").strip()) > 0,
         "next_public_supabase_anon_key_exists": os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY") is not None and len(os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY").strip()) > 0,
         "search_service_init_status": init_status,
-        "search_service_init_error": init_error
+        "search_service_init_error": init_error,
+        "package_versions": versions
     }
 
 
