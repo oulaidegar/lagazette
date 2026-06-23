@@ -8,9 +8,17 @@ from pathlib import Path
 env_path = Path(__file__).parent.parent / '.env'
 load_dotenv(env_path)
 
-url = os.getenv("SUPABASE_URL")
-key = os.getenv("SUPABASE_SERVICE_KEY") # Use Service Key for backend
-supabase: Client = create_client(url, key)
+_supabase_client: Client = None
+
+def get_supabase_client() -> Client:
+    global _supabase_client
+    if _supabase_client is None:
+        url = os.getenv("SUPABASE_URL")
+        key = os.getenv("SUPABASE_SERVICE_KEY") # Use Service Key for backend
+        if not url or not key:
+            raise ValueError("SUPABASE_URL and SUPABASE_SERVICE_KEY must be set in environment")
+        _supabase_client = create_client(url, key)
+    return _supabase_client
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -19,7 +27,8 @@ def get_current_user_id(token: str = Depends(oauth2_scheme)) -> str:
     Validate the JWT token with Supabase and return the user ID.
     """
     try:
-        user_response = supabase.auth.get_user(token)
+        client = get_supabase_client()
+        user_response = client.auth.get_user(token)
         if not user_response or not user_response.user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
