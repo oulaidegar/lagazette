@@ -1,8 +1,6 @@
 
 import os
 from typing import List, Dict, Any
-from gliner import GLiNER
-import torch
 from supabase import create_client, Client
 
 class EntityExtractionService:
@@ -16,6 +14,9 @@ class EntityExtractionService:
     def load_model(self):
         """Lazy load the GLiNER model to save resources on startup"""
         if not self.model:
+            from gliner import GLiNER
+            import torch
+            
             print("Loading GLiNER model...")
             # Using gliner_small-v2.1 for speed/quality balance
             self.model = GLiNER.from_pretrained("urchade/gliner_small-v2.1")
