@@ -181,8 +181,8 @@ class SearchService:
             try:
                 # Use Supabase text_search on content/title
                 kw_query = self.supabase.table('legal_units').select('id, type, unit_number, title, issuer, content, issues!inner(issue_number, year), page_number')\
-                    .text_search('content', query, config='arabic')\
-                    .limit(fetch_count)
+                    .limit(fetch_count)\
+                    .text_search('content', query, options={'config': 'arabic'})
                 
                 # Apply basic filters if possible to reduce noise
                 # (Complex filters like date range might be better post-merge or require complex query building)
@@ -260,8 +260,7 @@ class SearchService:
                             model='rerank-multilingual-v3.0',
                             query=query,
                             documents=docs_to_rank,
-                            top_n=limit,
-                            return_documents=False
+                            top_n=limit
                         )
                         
                         # Re-order based on rerank indices
