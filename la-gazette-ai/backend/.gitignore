@@ -1,0 +1,19 @@
+# Ignore heavy python environments
+venv/
+venv-312/
+
+# Ignore raw data files and PDFs
+workers/ocr_pdfs/
+workers/ocr_output/
+workers/2024/
+workers/test_ocr.pdf
+advanced_output/
+
+# Ignore logs and caches
+*.log
+**/__pycache__/
+.DS_Store
+
+# Ignore local configuration files
+.env
+.env.local

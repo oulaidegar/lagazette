@@ -1,0 +1,16 @@
+# Ignore heavy python environments
+venv/
+venv-312/
+
+# Ignore raw data files and PDFs
+workers/
+advanced_output/
+
+# Ignore logs and caches
+*.log
+**/__pycache__/
+.DS_Store
+
+# Ignore local configuration files
+.env
+.env.local
