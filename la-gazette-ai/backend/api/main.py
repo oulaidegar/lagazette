@@ -6,6 +6,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from uuid import UUID
 import logging
 
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).parent))
+
 from typing import List
 from models import (
     SearchRequest, SearchResponse, LegalUnitDetail, 
