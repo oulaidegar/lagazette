@@ -83,6 +83,18 @@ async def root():
     }
 
 
+@app.get("/debug-env", tags=["Health"])
+async def debug_env():
+    import os
+    return {
+        "supabase_url_exists": os.getenv("SUPABASE_URL") is not None and len(os.getenv("SUPABASE_URL").strip()) > 0,
+        "supabase_service_key_exists": os.getenv("SUPABASE_SERVICE_KEY") is not None and len(os.getenv("SUPABASE_SERVICE_KEY").strip()) > 0,
+        "cohere_api_key_exists": os.getenv("COHERE_API_KEY") is not None and len(os.getenv("COHERE_API_KEY").strip()) > 0,
+        "next_public_supabase_url_exists": os.getenv("NEXT_PUBLIC_SUPABASE_URL") is not None and len(os.getenv("NEXT_PUBLIC_SUPABASE_URL").strip()) > 0,
+        "next_public_supabase_anon_key_exists": os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY") is not None and len(os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY").strip()) > 0,
+    }
+
+
 @app.get("/health", response_model=HealthResponse, tags=["Health"])
 async def health_check():
     """Health check endpoint"""
