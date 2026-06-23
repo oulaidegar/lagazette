@@ -7,20 +7,20 @@ export function cn(...inputs: ClassValue[]) {
 
 // API Configuration
 const getApiBaseUrl = () => {
+    // If running in browser (client side)
+    if (typeof window !== "undefined") {
+        return "/_/backend";
+    }
+
     // If NEXT_PUBLIC_API_URL is explicitly set, use it.
     if (process.env.NEXT_PUBLIC_API_URL) {
         return process.env.NEXT_PUBLIC_API_URL;
     }
     
-    // If running on Vercel (server side or client side)
+    // If running on Vercel (server side during static build)
     const vercelUrl = process.env.NEXT_PUBLIC_VERCEL_URL || process.env.VERCEL_URL;
     if (vercelUrl) {
         return `https://${vercelUrl}/_/backend`;
-    }
-    
-    // If running in browser (client side)
-    if (typeof window !== "undefined") {
-        return "/_/backend";
     }
     
     // Local fallback
