@@ -1,0 +1,14 @@
+# Ignore node modules and local builds
+node_modules/
+.next/
+out/
+build/
+dist/
+
+# Ignore logs and caches
+*.log
+.DS_Store
+
+# Ignore local environment files
+.env
+.env.local
