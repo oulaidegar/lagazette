@@ -83,6 +83,31 @@ async def root():
     }
 
 
+@app.get("/debug-env", tags=["Health"])
+async def debug_env():
+    import os
+    import traceback
+    
+    init_error = None
+    try:
+        from search_service import SearchService
+        s = SearchService()
+        init_status = "success"
+    except Exception as e:
+        init_status = "failed"
+        init_error = f"{type(e).__name__}: {str(e)}\n{traceback.format_exc()}"
+        
+    return {
+        "supabase_url_exists": os.getenv("SUPABASE_URL") is not None and len(os.getenv("SUPABASE_URL").strip()) > 0,
+        "supabase_service_key_exists": os.getenv("SUPABASE_SERVICE_KEY") is not None and len(os.getenv("SUPABASE_SERVICE_KEY").strip()) > 0,
+        "cohere_api_key_exists": os.getenv("COHERE_API_KEY") is not None and len(os.getenv("COHERE_API_KEY").strip()) > 0,
+        "next_public_supabase_url_exists": os.getenv("NEXT_PUBLIC_SUPABASE_URL") is not None and len(os.getenv("NEXT_PUBLIC_SUPABASE_URL").strip()) > 0,
+        "next_public_supabase_anon_key_exists": os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY") is not None and len(os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY").strip()) > 0,
+        "search_service_init_status": init_status,
+        "search_service_init_error": init_error
+    }
+
+
 @app.get("/health", response_model=HealthResponse, tags=["Health"])
 async def health_check():
     """Health check endpoint"""
