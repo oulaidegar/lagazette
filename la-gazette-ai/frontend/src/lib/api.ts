@@ -151,11 +151,15 @@ export const api = {
         const response = await fetch(`${API_BASE_URL}/search`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ query, limit, filters, offset, sort_by }),
+            body: JSON.stringify({ query, limit, filters: filters && Object.keys(filters).length > 0 ? filters : undefined, offset, sort_by }),
             cache: "no-store",
         });
 
-        if (!response.ok) throw new Error("Search failed");
+        if (!response.ok) {
+            const errDetail = await response.text().catch(() => "");
+            console.error(`Backend search error (${response.status}):`, errDetail);
+            throw new Error(`Search failed with status ${response.status}: ${errDetail}`);
+        }
         return response.json();
     },
 

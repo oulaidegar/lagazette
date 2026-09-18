@@ -217,7 +217,7 @@ class SearchService:
                     kw_query = self.supabase.table('legal_units')\
                         .select('id, type, unit_number, title, issuer, effective_date, content, issues!inner(issue_number, year, publication_date), page_number')\
                         .limit(fetch_count)\
-                        .text_search('content', clean_query, options={'config': 'arabic'})
+                        .text_search('content', clean_query, options={'type': 'plain', 'config': 'arabic'})
                     
                     kw_res = kw_query.execute()
                     keyword_results = kw_res.data or []
@@ -355,7 +355,22 @@ class SearchService:
         total_count = len(filtered_results)
         paged_candidates = filtered_results[offset : offset + limit]
 
-        # 7. Final Formatting
+        # 7. Final Formatting: Batch fetch missing issue metadata
+        missing_ids = [
+            row['id'] for row in paged_candidates 
+            if 'issues' not in row or not isinstance(row.get('issues'), dict)
+        ]
+        metadata_map = {}
+        if missing_ids:
+            try:
+                meta_res = self.supabase.table('legal_units').select(
+                    'id, page_number, effective_date, issues!inner(issue_number, year, publication_date)'
+                ).in_('id', missing_ids).execute()
+                for item in (meta_res.data or []):
+                    metadata_map[item['id']] = item
+            except Exception as e:
+                print(f"Batch metadata fetch error: {e}")
+
         results = []
         for row in paged_candidates:
             issue_source = None
@@ -369,26 +384,19 @@ class SearchService:
                     publication_date=str(pub_date) if pub_date else None,
                     date_precision="unverified" if pub_date else "year_only"
                 )
-            else:
-                try:
-                    issue_res = self.supabase.table('legal_units').select(
-                        'page_number, effective_date, issues!inner(issue_number, year, publication_date)'
-                    ).eq('id', row['id']).execute()
-                    
-                    if issue_res.data:
-                        d = issue_res.data[0]
-                        pub_date = d['issues'].get('publication_date')
-                        issue_source = IssueSource(
-                            issue_number=d['issues']['issue_number'],
-                            year=d['issues']['year'],
-                            page_number=d['page_number'],
-                            publication_date=str(pub_date) if pub_date else None,
-                            date_precision="unverified" if pub_date else "year_only"
-                        )
-                        if 'effective_date' in d and not row.get('effective_date'):
-                            row['effective_date'] = d.get('effective_date')
-                except:
-                    pass
+            elif row['id'] in metadata_map:
+                d = metadata_map[row['id']]
+                d_issues = d.get('issues') or {}
+                pub_date = d_issues.get('publication_date')
+                issue_source = IssueSource(
+                    issue_number=d_issues.get('issue_number', 0),
+                    year=d_issues.get('year', 0),
+                    page_number=d.get('page_number') or row.get('page_number'),
+                    publication_date=str(pub_date) if pub_date else None,
+                    date_precision="unverified" if pub_date else "year_only"
+                )
+                if 'effective_date' in d and not row.get('effective_date'):
+                    row['effective_date'] = d.get('effective_date')
 
             if not issue_source and row.get('source'):
                 issue_source = row['source']

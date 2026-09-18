@@ -54,18 +54,18 @@ class IssueSource(BaseModel):
     issue_number: int
     year: int
     page_number: Optional[int] = None
-    publication_date: Optional[str] = None
+    publication_date: Optional[Union[date, str]] = None
     date_precision: Optional[str] = Field("year_only", description="exact, year_only, unverified")
 
 
 class LegalUnitBase(BaseModel):
     """Base legal unit information"""
     id: UUID
-    type: Optional[str]
-    unit_number: Optional[str]
-    title: Optional[str]
-    issuer: Optional[str]
-    effective_date: Optional[date]
+    type: Optional[str] = None
+    unit_number: Optional[str] = None
+    title: Optional[str] = None
+    issuer: Optional[str] = None
+    effective_date: Optional[Union[date, str]] = None
     is_table: bool
     source: IssueSource
 
