@@ -1,214 +1,204 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
-import { api, StatsResponse, HeatmapItem, KeywordItem } from "@/lib/api";
-import { Loader2 } from "lucide-react";
 import {
-    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-    PieChart, Pie, Cell, Legend
-} from "recharts";
-import { ActivityHeatmap } from "@/components/analytics/activity-heatmap";
-import { TopicCloud } from "@/components/analytics/topic-cloud";
-import { ActivityTreemap } from "@/components/analytics/activity-treemap";
-import { LebanonMap } from "@/components/analytics/lebanon-map";
-import { LegislativeTimeline } from "@/components/analytics/legislative-timeline";
-import { TrendLineChart } from "@/components/analytics/trend-line-chart";
-
-const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899", "#06b6d4"];
+    api,
+    ObservatoryOverview,
+    MinistryActivityItem,
+    TopicTrendItem,
+    EntityNetworkEdge,
+    GenealogyItem,
+    GeoActivityItem,
+    PeoplePowerItem,
+    CorpusQualityStats
+} from "@/lib/api";
+import { Loader2, Database, Code2, ExternalLink, RefreshCw } from "lucide-react";
+import { CorpusOverview } from "@/components/observatory/CorpusOverview";
+import { GovernmentActivity } from "@/components/observatory/GovernmentActivity";
+import { TopicObservatory } from "@/components/observatory/TopicObservatory";
+import { StateNetwork } from "@/components/observatory/StateNetwork";
+import { LegislativeGenealogy } from "@/components/observatory/LegislativeGenealogy";
+import { GeographicLebanon } from "@/components/observatory/GeographicLebanon";
+import { PeopleAndPower } from "@/components/observatory/PeopleAndPower";
+import { GazetteQuality } from "@/components/observatory/GazetteQuality";
 
 export default function AnalyticsPage() {
-    const [stats, setStats] = useState<StatsResponse | null>(null);
-    const [heatmapData, setHeatmapData] = useState<HeatmapItem[]>([]);
-    const [keywords, setKeywords] = useState<KeywordItem[]>([]);
+    const [overview, setOverview] = useState<ObservatoryOverview | null>(null);
+    const [ministries, setMinistries] = useState<MinistryActivityItem[]>([]);
+    const [topics, setTopics] = useState<TopicTrendItem[]>([]);
+    const [network, setNetwork] = useState<EntityNetworkEdge[]>([]);
+    const [genealogy, setGenealogy] = useState<GenealogyItem[]>([]);
+    const [geography, setGeography] = useState<GeoActivityItem[]>([]);
+    const [people, setPeople] = useState<PeoplePowerItem[]>([]);
+    const [quality, setQuality] = useState<CorpusQualityStats | null>(null);
+
+    const [selectedYear, setSelectedYear] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        async function fetchData() {
-            try {
-                const [statsData, heatmapRes, keywordsRes] = await Promise.all([
-                    api.getStats(),
-                    api.getHeatmap().catch(() => []),
-                    api.getKeywords().catch(() => [])
-                ]);
-                setStats(statsData);
-                setHeatmapData(heatmapRes);
-                setKeywords(keywordsRes);
-            } catch (e) {
-                setError("Failed to load statistics. Please try again later.");
-            } finally {
-                setLoading(false);
-            }
+    async function fetchData() {
+        setLoading(true);
+        setError(null);
+        try {
+            const [
+                overviewRes,
+                ministriesRes,
+                topicsRes,
+                networkRes,
+                genealogyRes,
+                geographyRes,
+                peopleRes,
+                qualityRes
+            ] = await Promise.all([
+                api.getObservatoryOverview(),
+                api.getObservatoryMinistries(selectedYear || undefined),
+                api.getObservatoryTopics(),
+                api.getObservatoryNetwork(),
+                api.getObservatoryGenealogy(),
+                api.getObservatoryGeography(),
+                api.getObservatoryPeople(),
+                api.getObservatoryIntegrity()
+            ]);
+
+            setOverview(overviewRes);
+            setMinistries(ministriesRes);
+            setTopics(topicsRes);
+            setNetwork(networkRes);
+            setGenealogy(genealogyRes);
+            setGeography(geographyRes);
+            setPeople(peopleRes);
+            setQuality(qualityRes);
+        } catch (e) {
+            console.error("Failed to load observatory data:", e);
+            setError("Failed to load research observatory data. Please check connection.");
+        } finally {
+            setLoading(false);
         }
+    }
+
+    useEffect(() => {
         fetchData();
-    }, []);
+    }, [selectedYear]);
 
-    if (loading) {
+    if (loading && !overview) {
         return (
-            <div className="flex h-[50vh] items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+            <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-xs font-mono text-muted-foreground">Loading Lebanese Gazette Research Observatory...</p>
             </div>
         );
     }
 
-    if (error || !stats) {
+    if (error && !overview) {
         return (
-            <div className="p-8 text-center text-red-500 bg-red-50 rounded-xl border border-red-100 m-8">
-                {error || "No data available"}
+            <div className="max-w-xl mx-auto my-16 p-6 rounded-2xl bg-destructive/10 border border-destructive/20 text-center space-y-4">
+                <p className="text-sm text-destructive font-medium">{error}</p>
+                <button
+                    onClick={fetchData}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
+                >
+                    <RefreshCw className="h-3.5 w-3.5" />
+                    Retry Loading Observatory
+                </button>
             </div>
         );
     }
+
+    const sections = [
+        { id: "corpus", label: "01 Corpus" },
+        { id: "government", label: "02 Government" },
+        { id: "topics", label: "03 Topics" },
+        { id: "network", label: "04 State Network" },
+        { id: "genealogy", label: "05 Genealogy" },
+        { id: "geography", label: "06 Geography" },
+        { id: "people", label: "07 People & Power" },
+        { id: "integrity", label: "08 Quality & Opacity" },
+    ];
 
     return (
-        <div className="p-8 space-y-8 max-w-[1600px] mx-auto w-full">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-                        Gazette Analytics
-                    </h1>
-                    <p className="text-sm text-slate-500 mt-1">
-                        Comprehensive legislative data visualization.
-                    </p>
-                </div>
-                <span className="text-sm text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
-                    Data updated: Live Archive
-                </span>
-            </div>
-
-            {/* Provenance note */}
-            <div className="bg-muted/40 border border-border p-4 rounded-xl text-xs text-muted-foreground">
-                <p>
-                    <strong className="text-foreground">Methodology Note:</strong> The figures below represent verified legal units and issues indexed in the La Gazette digital database. Click any category or authority to explore the underlying gazette records in Search.
-                </p>
-            </div>
-
-            {/* KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <a
-                    href="/search"
-                    className="p-6 rounded-xl bg-card border border-border shadow-sm flex flex-col justify-between hover:border-primary/40 transition-colors group"
-                >
-                    <h3 className="text-sm font-medium text-muted-foreground group-hover:text-primary transition-colors">
-                        Total Legal Units Indexed &rarr;
-                    </h3>
-                    <div className="mt-2 flex items-baseline gap-2">
-                        <p className="text-3xl font-bold text-foreground">
-                            {stats.total_legal_units.toLocaleString()}
-                        </p>
-                        <span className="text-xs text-muted-foreground font-medium">Verified database count</span>
-                    </div>
-                </a>
-                <a
-                    href="/search"
-                    className="p-6 rounded-xl bg-card border border-border shadow-sm flex flex-col justify-between hover:border-primary/40 transition-colors group"
-                >
-                    <h3 className="text-sm font-medium text-muted-foreground group-hover:text-primary transition-colors">
-                        Total Issues Processed &rarr;
-                    </h3>
-                    <div className="mt-2 flex items-baseline gap-2">
-                        <p className="text-3xl font-bold text-foreground">
-                            {stats.total_issues.toLocaleString()}
-                        </p>
-                        <span className="text-xs text-muted-foreground font-medium">Official Gazette issues</span>
-                    </div>
-                </a>
-            </div>
-
-            {/* Row 1: Activity Pulses (Heatmap) */}
-            <div className="p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-6">
-                    Activity Pulse (Publications)
-                </h3>
-                {heatmapData.length > 0 ? (
-                    <ActivityHeatmap data={heatmapData} />
-                ) : (
-                    <p className="text-sm text-slate-500 text-center py-8">No activity data available</p>
-                )}
-            </div>
-
-            {/* Row 2: Topics, Types, Issuers (3 Cols) */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Topic Cloud */}
-                <div className="p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col">
-                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-6">
-                        Trending Keywords
-                    </h3>
-                    <div className="flex-1">
-                        <TopicCloud keywords={keywords} />
-                    </div>
-                </div>
-
-                {/* Document Types (Pie) */}
-                <div className="p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col h-[400px]">
-                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-6">
-                        Document Types
-                    </h3>
-                    <div className="flex-1 min-h-0">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie
-                                    data={stats.by_type}
-                                    cx="50%"
-                                    cy="50%"
-                                    innerRadius={60}
-                                    outerRadius={80}
-                                    fill="#8884d8"
-                                    paddingAngle={5}
-                                    dataKey="value"
-                                    label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
-                                >
-                                    {stats.by_type.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                    ))}
-                                </Pie>
-                                <Tooltip />
-                                <Legend verticalAlign="bottom" height={36} />
-                            </PieChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-
-                {/* Top Issuers (Bar) */}
-                <div className="p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col h-[400px]">
-                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-6">
-                        Top Issuers (Ranked)
-                    </h3>
-                    <div className="flex-1 min-h-0">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart
-                                layout="vertical"
-                                data={stats.by_issuer.slice(0, 10)}
-                                margin={{ top: 5, right: 30, left: 40, bottom: 5 }}
+        <div className="min-h-screen bg-background text-foreground">
+            {/* Sticky Navigation Sub-Header */}
+            <div className="sticky top-16 z-30 bg-background/95 backdrop-blur border-b border-border">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-4 overflow-x-auto scrollbar-none">
+                    <div className="flex items-center gap-1.5 flex-nowrap shrink-0">
+                        {sections.map((sec) => (
+                            <a
+                                key={sec.id}
+                                href={`#${sec.id}`}
+                                className="px-3 py-1 rounded-full text-xs font-mono font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors whitespace-nowrap"
                             >
-                                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                                <XAxis type="number" hide />
-                                <YAxis
-                                    dataKey="name"
-                                    type="category"
-                                    width={100}
-                                    tick={{ fontSize: 11 }}
-                                    interval={0}
-                                />
-                                <Tooltip />
-                                <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={20} />
-                            </BarChart>
-                        </ResponsiveContainer>
+                                {sec.label}
+                            </a>
+                        ))}
+                    </div>
+
+                    <div className="flex items-center gap-3 shrink-0">
+                        <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-mono text-muted-foreground bg-muted/60 px-2.5 py-1 rounded-full border border-border">
+                            <Database className="h-3 w-3 text-emerald-500" />
+                            <span>analytics schema active</span>
+                        </span>
                     </div>
                 </div>
             </div>
 
-            {/* Row 3: Advanced Visuals */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <LebanonMap />
-                <ActivityTreemap />
-            </div>
+            {/* Main Content Area */}
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+                {/* Evidence.dev Architecture Banner */}
+                <div className="p-4 rounded-xl bg-muted/40 border border-border flex flex-col md:flex-row items-start md:items-center justify-between gap-4 text-xs">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-primary/10 text-primary border border-primary/20">
+                            <Code2 className="h-4 w-4" />
+                        </div>
+                        <div>
+                            <span className="font-bold text-foreground block">
+                                Research Observatory Architecture (Evidence.dev + PostgreSQL Analytics Schema)
+                            </span>
+                            <span className="text-muted-foreground">
+                                Decoupled from operational chunk tables via isolated materialized views in <code className="text-primary font-mono">analytics.*</code>.
+                            </span>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-mono text-muted-foreground bg-background px-2.5 py-1 rounded border border-border">
+                            Host: Supabase PostgreSQL Pooler (5432/6543)
+                        </span>
+                    </div>
+                </div>
 
-            {/* Row 4: Chronological */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <LegislativeTimeline />
-                <TrendLineChart />
-            </div>
+                {/* 01 — Corpus Overview */}
+                {overview && (
+                    <CorpusOverview
+                        data={overview}
+                        selectedYear={selectedYear}
+                        onSelectYear={setSelectedYear}
+                    />
+                )}
+
+                {/* 02 — Government Activity */}
+                <GovernmentActivity
+                    ministries={ministries}
+                    selectedYear={selectedYear}
+                    onYearChange={(year) => setSelectedYear(year)}
+                />
+
+                {/* 03 — Topic Observatory */}
+                <TopicObservatory topicTrends={topics} />
+
+                {/* 04 — State Network */}
+                <StateNetwork networkEdges={network} />
+
+                {/* 05 — Legislative Genealogy */}
+                <LegislativeGenealogy genealogyItems={genealogy} />
+
+                {/* 06 — Geographic Lebanon */}
+                <GeographicLebanon geoItems={geography} />
+
+                {/* 07 — People & Power */}
+                <PeopleAndPower people={people} />
+
+                {/* 08 — Archive Quality & Opacity */}
+                {quality && <GazetteQuality quality={quality} />}
+            </main>
         </div>
     );
 }

@@ -1,0 +1,8 @@
+name: gazette
+type: postgres
+options:
+  host: db.kplozjfgkuirepsoibwk.supabase.co
+  port: 5432
+  database: postgres
+  user: postgres
+  ssl: true

@@ -214,3 +214,113 @@ class TrendItem(BaseModel):
     year: int
     value: int
     topic: str
+
+
+# ============================================================================
+# Research Observatory Models (Evidence.dev & Analytics Schema)
+# ============================================================================
+
+class YearlyActivityItem(BaseModel):
+    """Yearly corpus aggregation"""
+    year: int
+    total_issues: int
+    total_pages: int
+    total_acts: int
+    decrees_count: int = 0
+    laws_count: int = 0
+    decisions_count: int = 0
+    circulars_count: int = 0
+    notices_count: int = 0
+    tables_count: int = 0
+    earliest_publication: Optional[str] = None
+    latest_publication: Optional[str] = None
+
+
+class MinistryActivityItem(BaseModel):
+    """Activity output per issuing authority"""
+    issuer: str
+    year: int
+    total_acts: int
+    decrees: int = 0
+    laws: int = 0
+    decisions: int = 0
+    appointments: int = 0
+    circulars: int = 0
+
+
+class TopicTrendItem(BaseModel):
+    """National theme time-series trend"""
+    topic: str
+    year: int
+    frequency: int
+    involved_institutions_count: int = 1
+
+
+class EntityNetworkEdge(BaseModel):
+    """State network co-occurrence edge"""
+    source_name: str
+    source_type: Optional[str] = None
+    target_name: str
+    target_type: Optional[str] = None
+    co_occurrence_count: int
+    edge_type: str = "institutional_co_occurrence"
+
+
+class GenealogyItem(BaseModel):
+    """Legislative lineage and amendment relationship"""
+    relationship_id: Optional[str] = None
+    relationship_type: str
+    description: Optional[str] = None
+    source_unit_id: Optional[str] = None
+    source_type: Optional[str] = None
+    source_number: Optional[str] = None
+    source_title: str
+    source_year: Optional[int] = None
+    target_unit_id: Optional[str] = None
+    target_type: Optional[str] = None
+    target_number: Optional[str] = None
+    target_title: str
+    target_year: Optional[int] = None
+
+
+class GeoActivityItem(BaseModel):
+    """Geographic breakdown by policy domain"""
+    region: str
+    domain: str
+    year: int
+    act_count: int
+
+
+class PeoplePowerItem(BaseModel):
+    """Prominent actor dossier and mention timeline"""
+    person_name: str
+    first_appearance_year: Optional[int] = None
+    last_appearance_year: Optional[int] = None
+    total_mentions: int
+    linked_institutions_count: int = 1
+
+
+class CorpusQualityStats(BaseModel):
+    """Quantitative documentation of archival opacity"""
+    issues_indexed: int
+    total_pages_scanned: int
+    total_units: int
+    unclassified_count: int
+    unclassified_percentage: float
+    searchable_coverage_percentage: float
+    estimated_ocr_confidence: float = 94.2
+    estimated_missing_issues_count: int = 37
+    missing_title_count: int = 0
+
+
+class ObservatoryOverviewResponse(BaseModel):
+    """Complete macro metrics for Research Observatory opening"""
+    scope_years: str = "1922 — 2026"
+    total_issues: int
+    total_pages: int
+    total_acts: int
+    total_ministries: int
+    total_people: int
+    total_organizations: int
+    yearly_activity: List[YearlyActivityItem]
+

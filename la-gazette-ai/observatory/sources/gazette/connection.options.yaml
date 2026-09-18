@@ -1,0 +1,2 @@
+# Sensitive credentials (git-ignored in production)
+password: ""

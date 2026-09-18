@@ -140,6 +140,103 @@ export interface TrendItem {
     topic: string;
 }
 
+export interface YearlyActivityItem {
+    year: number;
+    total_issues: number;
+    total_pages: number;
+    total_acts: number;
+    decrees_count: number;
+    laws_count: number;
+    decisions_count: number;
+    circulars_count: number;
+    notices_count: number;
+    tables_count: number;
+    earliest_publication: string | null;
+    latest_publication: string | null;
+}
+
+export interface ObservatoryOverview {
+    scope_years: string;
+    total_issues: number;
+    total_pages: number;
+    total_acts: number;
+    total_ministries: number;
+    total_people: number;
+    total_organizations: number;
+    yearly_activity: YearlyActivityItem[];
+}
+
+export interface MinistryActivityItem {
+    issuer: string;
+    year: number;
+    total_acts: number;
+    decrees: number;
+    laws: number;
+    decisions: number;
+    appointments: number;
+    circulars: number;
+}
+
+export interface TopicTrendItem {
+    topic: string;
+    year: number;
+    frequency: number;
+    involved_institutions_count: number;
+}
+
+export interface EntityNetworkEdge {
+    source_name: string;
+    source_type?: string;
+    target_name: string;
+    target_type?: string;
+    co_occurrence_count: number;
+    edge_type: string;
+}
+
+export interface GenealogyItem {
+    relationship_id?: string;
+    relationship_type: string;
+    description?: string;
+    source_unit_id?: string;
+    source_type?: string;
+    source_number?: string;
+    source_title: string;
+    source_year?: number;
+    target_unit_id?: string;
+    target_type?: string;
+    target_number?: string;
+    target_title: string;
+    target_year?: number;
+}
+
+export interface GeoActivityItem {
+    region: string;
+    domain: string;
+    year: number;
+    act_count: number;
+}
+
+export interface PeoplePowerItem {
+    person_name: string;
+    first_appearance_year?: number;
+    last_appearance_year?: number;
+    total_mentions: number;
+    linked_institutions_count: number;
+}
+
+export interface CorpusQualityStats {
+    issues_indexed: number;
+    total_pages_scanned: number;
+    total_units: number;
+    unclassified_count: number;
+    unclassified_percentage: number;
+    searchable_coverage_percentage: number;
+    estimated_ocr_confidence: number;
+    estimated_missing_issues_count: number;
+    missing_title_count: number;
+}
+
+
 export const api = {
     async search(
         query: string, 
@@ -300,5 +397,65 @@ export const api = {
             return { is_bookmarked: false, bookmark_id: null, folder_id: null };
         }
         return response.json();
+    },
+
+    // ========================================================================
+    // Research Observatory Methods (Evidence.dev & Analytics Schema)
+    // ========================================================================
+    async getObservatoryOverview(): Promise<ObservatoryOverview> {
+        const response = await fetch(`${API_BASE_URL}/analytics/observatory/overview`, { cache: "no-store" });
+        if (!response.ok) throw new Error("Failed to load observatory overview");
+        return response.json();
+    },
+
+    async getObservatoryMinistries(year?: number, actType?: string): Promise<MinistryActivityItem[]> {
+        const params = new URLSearchParams();
+        if (year) params.append("year", year.toString());
+        if (actType && actType !== "all") params.append("act_type", actType);
+        const response = await fetch(`${API_BASE_URL}/analytics/observatory/ministries?${params.toString()}`, { cache: "no-store" });
+        if (!response.ok) throw new Error("Failed to load ministry activity");
+        return response.json();
+    },
+
+    async getObservatoryTopics(topic?: string): Promise<TopicTrendItem[]> {
+        const params = new URLSearchParams();
+        if (topic) params.append("topic", topic);
+        const response = await fetch(`${API_BASE_URL}/analytics/observatory/topics?${params.toString()}`, { cache: "no-store" });
+        if (!response.ok) throw new Error("Failed to load topic trends");
+        return response.json();
+    },
+
+    async getObservatoryNetwork(): Promise<EntityNetworkEdge[]> {
+        const response = await fetch(`${API_BASE_URL}/analytics/observatory/network`, { cache: "no-store" });
+        if (!response.ok) throw new Error("Failed to load entity network");
+        return response.json();
+    },
+
+    async getObservatoryGenealogy(): Promise<GenealogyItem[]> {
+        const response = await fetch(`${API_BASE_URL}/analytics/observatory/genealogy`, { cache: "no-store" });
+        if (!response.ok) throw new Error("Failed to load legislative genealogy");
+        return response.json();
+    },
+
+    async getObservatoryGeography(region?: string, domain?: string): Promise<GeoActivityItem[]> {
+        const params = new URLSearchParams();
+        if (region) params.append("region", region);
+        if (domain) params.append("domain", domain);
+        const response = await fetch(`${API_BASE_URL}/analytics/observatory/geography?${params.toString()}`, { cache: "no-store" });
+        if (!response.ok) throw new Error("Failed to load geographic data");
+        return response.json();
+    },
+
+    async getObservatoryPeople(): Promise<PeoplePowerItem[]> {
+        const response = await fetch(`${API_BASE_URL}/analytics/observatory/people`, { cache: "no-store" });
+        if (!response.ok) throw new Error("Failed to load people and power");
+        return response.json();
+    },
+
+    async getObservatoryIntegrity(): Promise<CorpusQualityStats> {
+        const response = await fetch(`${API_BASE_URL}/analytics/observatory/integrity`, { cache: "no-store" });
+        if (!response.ok) throw new Error("Failed to load corpus quality");
+        return response.json();
     }
 };
+

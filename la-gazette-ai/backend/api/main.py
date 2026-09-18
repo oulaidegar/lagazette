@@ -16,7 +16,10 @@ from models import (
     SearchRequest, SearchResponse, LegalUnitDetail, 
     IssueListResponse, HealthResponse, StatsResponse,
     HeatmapItem, KeywordItem, EntityItem,
-    TreemapItem, MapItem, TimelineItem, TrendItem
+    TreemapItem, MapItem, TimelineItem, TrendItem,
+    ObservatoryOverviewResponse, MinistryActivityItem,
+    TopicTrendItem, EntityNetworkEdge, GenealogyItem,
+    GeoActivityItem, PeoplePowerItem, CorpusQualityStats
 )
 from search_service import SearchService
 from entity_service import EntityExtractionService
@@ -325,6 +328,115 @@ async def get_trends(topic: str = Query(..., min_length=1)):
     except Exception as e:
         logger.error(f"Trends error: {e}")
         raise HTTPException(500, str(e))
+
+
+# ============================================================================
+# Research Observatory Endpoints (Evidence.dev & Analytics Schema)
+# ============================================================================
+
+@app.get("/analytics/observatory/overview", response_model=ObservatoryOverviewResponse, tags=["Observatory"])
+async def get_observatory_overview():
+    """01 — Corpus: Macro numbers and yearly publication timeline"""
+    if search_service is None:
+        raise HTTPException(503, "Search service unavailable")
+    try:
+        return search_service.get_observatory_overview()
+    except Exception as e:
+        logger.error(f"Observatory overview error: {e}")
+        raise HTTPException(500, str(e))
+
+
+@app.get("/analytics/observatory/ministries", response_model=List[MinistryActivityItem], tags=["Observatory"])
+async def get_observatory_ministries(
+    year: int = Query(None, description="Filter by year (e.g. 2025)"),
+    act_type: str = Query("all", description="All, decrees, laws, decisions, appointments")
+):
+    """02 — Government Activity: Ministry rankings by act types"""
+    if search_service is None:
+        raise HTTPException(503, "Search service unavailable")
+    try:
+        return search_service.get_observatory_ministries(year, act_type)
+    except Exception as e:
+        logger.error(f"Observatory ministries error: {e}")
+        raise HTTPException(500, str(e))
+
+
+@app.get("/analytics/observatory/topics", response_model=List[TopicTrendItem], tags=["Observatory"])
+async def get_observatory_topics(
+    topic: str = Query(None, description="Topic name (Electricity, Banking, Refugees, etc.)")
+):
+    """03 — Topic Observatory: Longitudinal time series for national themes"""
+    if search_service is None:
+        raise HTTPException(503, "Search service unavailable")
+    try:
+        return search_service.get_observatory_topics(topic)
+    except Exception as e:
+        logger.error(f"Observatory topics error: {e}")
+        raise HTTPException(500, str(e))
+
+
+@app.get("/analytics/observatory/network", response_model=List[EntityNetworkEdge], tags=["Observatory"])
+async def get_observatory_network():
+    """04 — State Network: Institutional co-occurrence and oversight edges"""
+    if search_service is None:
+        raise HTTPException(503, "Search service unavailable")
+    try:
+        return search_service.get_observatory_network()
+    except Exception as e:
+        logger.error(f"Observatory network error: {e}")
+        raise HTTPException(500, str(e))
+
+
+@app.get("/analytics/observatory/genealogy", response_model=List[GenealogyItem], tags=["Observatory"])
+async def get_observatory_genealogy():
+    """05 — Legislative Genealogy: Amendment trees and citation pedigree"""
+    if search_service is None:
+        raise HTTPException(503, "Search service unavailable")
+    try:
+        return search_service.get_observatory_genealogy()
+    except Exception as e:
+        logger.error(f"Observatory genealogy error: {e}")
+        raise HTTPException(500, str(e))
+
+
+@app.get("/analytics/observatory/geography", response_model=List[GeoActivityItem], tags=["Observatory"])
+async def get_observatory_geography(
+    region: str = Query(None, description="Region/Governorate"),
+    domain: str = Query(None, description="Domain: Infrastructure, Land Acquisition, etc.")
+):
+    """06 — Geographic Lebanon: Spatial footprint and policy domains"""
+    if search_service is None:
+        raise HTTPException(503, "Search service unavailable")
+    try:
+        return search_service.get_observatory_geography(region, domain)
+    except Exception as e:
+        logger.error(f"Observatory geography error: {e}")
+        raise HTTPException(500, str(e))
+
+
+@app.get("/analytics/observatory/people", response_model=List[PeoplePowerItem], tags=["Observatory"])
+async def get_observatory_people():
+    """07 — People & Power: Named entity intelligence and careers"""
+    if search_service is None:
+        raise HTTPException(503, "Search service unavailable")
+    try:
+        return search_service.get_observatory_people()
+    except Exception as e:
+        logger.error(f"Observatory people error: {e}")
+        raise HTTPException(500, str(e))
+
+
+@app.get("/analytics/observatory/integrity", response_model=CorpusQualityStats, tags=["Observatory"])
+async def get_observatory_integrity():
+    """08 — Gazette Quality & Archival Opacity: Transparent archive metrics"""
+    if search_service is None:
+        raise HTTPException(503, "Search service unavailable")
+    try:
+        return search_service.get_observatory_integrity()
+    except Exception as e:
+        logger.error(f"Observatory integrity error: {e}")
+        raise HTTPException(500, str(e))
+
 
 
 @app.get("/library", tags=["Library"])

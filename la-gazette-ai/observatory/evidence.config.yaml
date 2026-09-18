@@ -1,0 +1,11 @@
+# Evidence.dev Configuration
+# La Gazette Research Observatory
+
+name: "Lebanese Official Gazette Research Observatory"
+deployment:
+  base_path: ""
+themes:
+  default: "dark"
+plugins:
+  datasources:
+    - "@evidence-dev/postgres"
