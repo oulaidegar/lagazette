@@ -5,26 +5,19 @@ import { RightsSection } from "@/components/information/rights-section";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Info, Scale, Book } from "lucide-react";
 
-import { Sidebar } from "@/components/layout/Sidebar";
-
 export default function InformationPage() {
     return (
-        <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950">
-            <Sidebar />
-            <div className="flex-1 lg:pl-64">
-                <div className="p-6 lg:p-10">
-                    <div className="max-w-6xl mx-auto space-y-10">
-
-                        {/* Header */}
-                        <div>
-                            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white mb-2">
-                                Legal Reference
-                            </h1>
-                            <p className="text-lg text-slate-600 dark:text-slate-400 max-w-3xl leading-relaxed">
-                                The Official Gazette is more than just an archive—it is the record of your rights and obligations as a citizen.
-                                Understanding the terminology and the legal framework is essential for civic participation.
-                            </p>
-                        </div>
+        <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+            {/* Header */}
+            <div>
+                <h1 className="text-3xl font-bold tracking-tight text-foreground mb-2">
+                    Legal Reference & Explainers / الدليل المرجعي والشروحات
+                </h1>
+                <p className="text-base text-muted-foreground max-w-3xl leading-relaxed">
+                    The Official Gazette is more than an archive—it is the authoritative record of rights, obligations, and state governance.
+                    Understanding the hierarchy of legal texts and constitutional guarantees is essential for civic participation.
+                </p>
+            </div>
 
                         {/* Content Tabs */}
                         <Tabs defaultValue="lingo" className="space-y-8">
@@ -71,9 +64,6 @@ export default function InformationPage() {
                                 <RightsSection />
                             </TabsContent>
                         </Tabs>
-                    </div>
-                </div>
-            </div>
         </div>
     );
 }

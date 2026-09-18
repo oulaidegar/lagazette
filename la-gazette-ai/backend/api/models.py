@@ -2,7 +2,7 @@
 Pydantic models for API request/response validation
 """
 from pydantic import BaseModel, Field
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Any, Union
 from datetime import date
 from uuid import UUID
 
@@ -26,6 +26,8 @@ class SearchRequest(BaseModel):
     """Search request payload"""
     query: str = Field(..., description="Search query in Arabic or French", min_length=0)
     limit: int = Field(10, description="Maximum number of results", ge=1, le=100)
+    offset: int = Field(0, description="Pagination offset", ge=0)
+    sort_by: Optional[str] = Field("relevance", description="Sort order: relevance, newest, oldest")
     filters: Optional[SearchFilters] = None
     
     class Config:
@@ -33,6 +35,8 @@ class SearchRequest(BaseModel):
             "example": {
                 "query": "قوانين الضرائب للشركات الصغيرة",
                 "limit": 10,
+                "offset": 0,
+                "sort_by": "relevance",
                 "filters": {
                     "type": "decree",
                     "year": 2025
@@ -50,6 +54,8 @@ class IssueSource(BaseModel):
     issue_number: int
     year: int
     page_number: Optional[int] = None
+    publication_date: Optional[str] = None
+    date_precision: Optional[str] = Field("year_only", description="exact, year_only, unverified")
 
 
 class LegalUnitBase(BaseModel):
@@ -66,22 +72,28 @@ class LegalUnitBase(BaseModel):
 
 class LegalUnitSummary(LegalUnitBase):
     """Legal unit summary for search results"""
-    content_preview: str = Field(..., description="First 300 characters of content")
+    content_preview: str = Field(..., description="Preview snippet around the match")
     similarity: float = Field(..., description="Similarity score (0-1)")
+    match_type: Optional[str] = Field("semantic", description="exact_reference, semantic, browse")
 
 
 class LegalUnitDetail(LegalUnitBase):
     """Full legal unit details"""
     content: str
-    table_data: Optional[dict] = None
+    table_data: Optional[Union[List[Any], Dict[str, Any]]] = None
     is_supplement: bool
+    source_pdf_url: Optional[str] = None
 
 
 class SearchResponse(BaseModel):
     """Search results response"""
     results: List[LegalUnitSummary]
     total: int
+    page: int = 1
+    page_size: int = 10
+    has_more: bool = False
     query_time_ms: float
+    coverage_note: Optional[str] = None
     
     class Config:
         json_schema_extra = {
@@ -97,14 +109,20 @@ class SearchResponse(BaseModel):
                         "is_table": False,
                         "content_preview": "قرار رقم ۱/۱۲۷۷ تاریخ ۱۹ كانون الأول سنة ۲۰۲٤...",
                         "similarity": 0.89,
+                        "match_type": "exact_reference",
                         "source": {
                             "issue_number": 9156,
                             "year": 2025,
-                            "page_number": 3
+                            "page_number": 3,
+                            "publication_date": None,
+                            "date_precision": "year_only"
                         }
                     }
                 ],
                 "total": 10,
+                "page": 1,
+                "page_size": 10,
+                "has_more": False,
                 "query_time_ms": 45.2
             }
         }
@@ -183,7 +201,8 @@ class MapItem(BaseModel):
 
 class TimelineItem(BaseModel):
     """Legislative timeline event"""
-    date: date
+    date: str
+    date_precision: str = "exact"
     title: str
     status: str
     description: Optional[str] = None

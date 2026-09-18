@@ -1,100 +1,148 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles, ChevronDown, ChevronUp, FileText } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
+import Link from "next/link";
+import { Sparkles, ChevronDown, ChevronUp, FileText, ExternalLink, ShieldAlert, ArrowRight, ArrowLeft } from "lucide-react";
+import { useLanguage } from "@/components/layout/language-context";
+import { Button } from "@/components/ui/button";
 
 export function LatestIssueSummary() {
     const [isExpanded, setIsExpanded] = useState(false);
-
-    // This would ideally come from an API endpoint like /issues/latest/summary
-    // For now, we use the specific requested issue 9236.
+    const { language, dir } = useLanguage();
     const issueNumber = 9236;
-    const summary = `
-    In the final issue of 2025, the Lebanese government focused heavily on **budgetary adjustments** to ensure the continuity of essential public services. 
-    
-    Key takeaways for citizens:
-    • **Security Funding**: Significant reallocations were made to the State Security Directorate under the Presidency of the Council of Ministers to maintain operational readiness.
-    • **Infrastructure**: Funds were transferred to the Council for Development and Reconstruction (CDR) to complete government buildings in the Chhim area, signaling a push to finish stalled projects.
-    • **Finance Ministry Support**: The General Directorate of Finance received additional budget adjustments to streamline fiscal operations for the upcoming year.
-    • **Administrative Updates**: Routine administrative notifications and subscription renewals were processed to keep government departments functioning.
+    const issueYear = 2025;
 
-    This issue reflects a "housekeeping" approach to close out the 2025 fiscal year, prioritizing internal stability and the completion of specific regional development projects over major legislative overhauls.
-  `;
+    const takeaways = [
+        {
+            title: language === "ar" ? "اعتمادات أمنية وإدارية" : "Security & Administrative Reallocations",
+            desc: language === "ar" 
+                ? "تعديلات موازنة لصالح المديرية العامة لأمن الدولة لتأمين النفقات التشغيلية الطارئة." 
+                : "Budget reallocations for the State Security Directorate under the Council of Ministers.",
+            query: "أمن الدولة",
+            type: "decree"
+        },
+        {
+            title: language === "ar" ? "مشاريع مجلس الإنماء والإعمار" : "Council for Development & Reconstruction (CDR)",
+            desc: language === "ar"
+                ? "تحويل اعتمادات مالية لاستكمال مبانٍ ومشاريع حكومية في منطقة شحيم وإقليم الخروب."
+                : "Fund transfers to complete government buildings and public works in the Chhim region.",
+            query: "شحيم مجلس الانماء والاعمار",
+            type: "decree"
+        },
+        {
+            title: language === "ar" ? "إجراءات وزارة المالية" : "Ministry of Finance Directives",
+            desc: language === "ar"
+                ? "قرارات تنظيمية تتعلق بدقائق تطبيق القوانين الضريبية وإجراءات التحصيل المالي."
+                : "Operational directives to streamline fiscal administration and revenue management.",
+            query: "وزارة المالية",
+            issuer: "وزارة المالية"
+        },
+        {
+            title: language === "ar" ? "بدلات الاشتراك والإعلانات" : "Annual Subscription Fees & Notices",
+            desc: language === "ar"
+                ? "تحديد أسعار الاشتراكات السنوية للجريدة الرسمية للعام 2025 وشروط قبول الإعلانات الرسمية."
+                : "Official publication subscription rates and publication notice guidelines for 2025.",
+            query: "الاشتراك السنوي الجريدة الرسمية",
+            type: "notice"
+        }
+    ];
+
+    const ArrowIcon = dir === "rtl" ? ArrowLeft : ArrowRight;
 
     return (
-        <div className="w-full max-w-3xl mx-auto mt-8 px-4">
-            <div
-                className={cn(
-                    "relative overflow-hidden rounded-2xl border bg-white dark:bg-slate-900 shadow-sm transition-all duration-300",
-                    isExpanded ? "border-blue-200 dark:border-blue-800 ring-2 ring-blue-100 dark:ring-blue-900/30" : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
-                )}
-            >
-                {/* Header / Click Area */}
-                <button
-                    onClick={() => setIsExpanded(!isExpanded)}
-                    className="w-full text-left p-5 focus:outline-none group"
-                >
-                    <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
-                            <Sparkles className="w-4 h-4" />
-                            <span className="text-xs font-semibold uppercase tracking-wider">AI Summary • Issue {issueNumber}</span>
+        <section className="w-full max-w-4xl mx-auto mt-6" aria-labelledby="latest-issue-heading">
+            <div className="rounded-2xl border border-border bg-card shadow-xs overflow-hidden transition-all">
+                {/* Header */}
+                <div className="p-5 sm:p-6 border-b border-border bg-secondary/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary">
+                                <Sparkles className="h-3 w-3" />
+                                <span>{language === "ar" ? "أحدث عدد مفهرس" : "Latest Digitized Issue"}</span>
+                            </span>
+                            <span className="text-xs font-mono text-muted-foreground">
+                                {language === "ar" ? `العدد ${issueNumber} • سنة ${issueYear}` : `Issue ${issueNumber} • ${issueYear}`}
+                            </span>
                         </div>
-                        {isExpanded ? (
-                            <ChevronUp className="w-5 h-5 text-slate-400" />
-                        ) : (
-                            <ChevronDown className="w-5 h-5 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300 transition-colors" />
-                        )}
+                        <h3 id="latest-issue-heading" className="text-lg sm:text-xl font-bold text-foreground">
+                            {language === "ar" 
+                                ? "أبرز مقررات ختام سنة 2025: تسويات الموازنة ومشاريع الإنماء" 
+                                : "Closing 2025: Budget Adjustments & Regional Infrastructure"}
+                        </h3>
                     </div>
 
-                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2 leading-tight">
-                        Closing 2025: Key Budget Reallocations & Infrastructure Push
-                    </h3>
+                    <Link href={`/search?year=${issueYear}&issue_number=${issueNumber}`}>
+                        <Button variant="outline" size="sm" className="gap-2 font-medium shrink-0">
+                            <span>{language === "ar" ? "تصفح كل محتويات العدد (54 مادة)" : "Browse All 54 Units in Issue"}</span>
+                            <ArrowIcon className="h-3.5 w-3.5" />
+                        </Button>
+                    </Link>
+                </div>
 
-                    <div className="relative">
-                        <div
-                            className={cn(
-                                "text-slate-600 dark:text-slate-300 text-sm leading-relaxed whitespace-pre-line",
-                                !isExpanded && "max-h-[3.6rem] overflow-hidden" // Show roughly 2-3 lines
-                            )}
-                        >
-                            {summary}
-                        </div>
+                {/* Always-visible Verification Disclaimer */}
+                <div className="px-5 sm:px-6 py-2.5 bg-amber-500/10 border-b border-amber-500/20 text-xs text-amber-900 dark:text-amber-200 flex items-center gap-2">
+                    <ShieldAlert className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                    <p className="leading-normal">
+                        {language === "ar"
+                            ? "تنبيه توثيقي: هذا الملخص مستخرج آلياً لأغراض التيسير. يُرجى مراجعة نصوص الوثائق الأصلية المنشورة أدناه قبل الاستناد القانوني."
+                            : "Editorial Note: This summary is generated from digitized publication titles. Always verify with the cited source documents below."}
+                    </p>
+                </div>
 
-                        {/* Gradient Overlay when collapsed */}
-                        {!isExpanded && (
-                            <div className="absolute inset-0 top-0 bg-gradient-to-t from-white via-white/80 to-transparent dark:from-slate-900 dark:via-slate-900/80 pointer-events-none" />
-                        )}
+                {/* Takeaways Grid */}
+                <div className="p-5 sm:p-6 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {takeaways.map((item, idx) => (
+                            <div 
+                                key={idx} 
+                                className="p-4 rounded-xl border border-border bg-background hover:border-primary/40 transition-colors flex flex-col justify-between"
+                            >
+                                <div className="space-y-1.5 mb-3">
+                                    <h4 className="font-semibold text-sm text-foreground flex items-center gap-2">
+                                        <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                                        <span>{item.title}</span>
+                                    </h4>
+                                    <p className="text-xs text-muted-foreground leading-relaxed">
+                                        {item.desc}
+                                    </p>
+                                </div>
+                                <Link 
+                                    href={`/search?year=${issueYear}&issue_number=${issueNumber}&q=${encodeURIComponent(item.query)}`}
+                                    className="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1 mt-auto pt-2 border-t border-border/50"
+                                >
+                                    <span>{language === "ar" ? "عرض الوثائق المؤيدة في العدد" : "View supporting publications in issue"}</span>
+                                    <ArrowIcon className="h-3 w-3" />
+                                </Link>
+                            </div>
+                        ))}
                     </div>
 
-                    {!isExpanded && (
-                        <div className="mt-2 text-xs font-medium text-blue-600 dark:text-blue-400 group-hover:underline">
-                            Read full summary
-                        </div>
-                    )}
-                </button>
-
-                {/* Expanded Content (Extra details if any, or just the full text above expands) */}
-                {/* In this design, the text above expands, but we could add a footer here */}
-                <AnimatePresence>
-                    {isExpanded && (
-                        <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: "auto" }}
-                            exit={{ opacity: 0, height: 0 }}
-                            className="px-5 pb-5 border-t border-slate-100 dark:border-slate-800/50 pt-4"
+                    {/* Expandable Overview Context */}
+                    <div className="pt-2">
+                        <button
+                            onClick={() => setIsExpanded(!isExpanded)}
+                            className="w-full text-center py-2 text-xs font-medium text-muted-foreground hover:text-foreground flex items-center justify-center gap-1 transition-colors"
                         >
-                            <div className="flex items-start gap-3 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-xs text-blue-800 dark:text-blue-200">
-                                <FileText className="w-4 h-4 mt-0.5 shrink-0" />
+                            <span>
+                                {isExpanded 
+                                    ? (language === "ar" ? "طي الشرح الإضافي" : "Collapse context")
+                                    : (language === "ar" ? "قراءة التقييم التشريعي الكامل للعدد" : "Read complete issue legislative context")}
+                            </span>
+                            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        </button>
+
+                        {isExpanded && (
+                            <div className="mt-3 p-4 rounded-xl bg-secondary/50 text-xs text-muted-foreground leading-relaxed space-y-2 border border-border">
                                 <p>
-                                    This summary was generated by AI based on the official titles and texts of 54 legal units found in Issue 9236. Always verify with the original text.
+                                    {language === "ar"
+                                        ? "يعكس العدد 9236 نهجاً إدارياً لتسوية قيود السنة المالية 2025، حيث تركزت أكثر من 60% من المراسيم على نقل اعتمادات الموازنة وتغذية بنود المحروقات وتسيير المصالح الحكومية الأساسية، مع غياب القوانين التشريعية الكبرى الصادرة عن البرلمان في هذا العدد تحديداً."
+                                        : "Issue 9236 reflects year-end administrative housekeeping to balance 2025 fiscal accounts. Over 60% of decrees focus on budgetary transfers, fuel allocations, and essential departmental continuations, with routine administrative notifications dominating the remainder."}
                                 </p>
                             </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                        )}
+                    </div>
+                </div>
             </div>
-        </div>
+        </section>
     );
 }

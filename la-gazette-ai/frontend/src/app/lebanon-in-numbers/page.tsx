@@ -17,10 +17,13 @@ export const metadata: Metadata = {
 export default function LebanonInNumbersPage() {
     return (
         <main className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-950">
-            {/* Header placeholder (sidebar removed) */}
-            <div className="sticky top-0 z-50 w-full border-b backdrop-blur supports-[backdrop-filter]:bg-background/60 border-slate-200 dark:border-slate-800 hidden md:flex h-14 items-center px-4">
-                <a href="/" className="text-sm font-medium text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors">
-                    &larr; Back to Home
+            {/* Context Header Bar */}
+            <div className="sticky top-0 z-50 w-full border-b backdrop-blur supports-[backdrop-filter]:bg-background/80 bg-background/80 border-border flex h-14 items-center justify-between px-4 sm:px-6">
+                <a href="/" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5">
+                    &larr; <span>Back to Home</span>
+                </a>
+                <a href="/search" className="text-xs sm:text-sm font-medium text-primary hover:underline">
+                    Search Gazette Archive &rarr;
                 </a>
             </div>
 

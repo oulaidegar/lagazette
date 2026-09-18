@@ -107,29 +107,36 @@ async def health_check():
 @app.post("/search", response_model=SearchResponse, tags=["Search"])
 async def search(request: SearchRequest):
     """
-    Semantic search for legal units
-    
-    Performs vector similarity search using Cohere embeddings to find
-    the most relevant legal units for a given query.
+    Search for legal units with hybrid semantic and keyword retrieval,
+    with enforced filter constraints and pagination.
     """
     if search_service is None:
         raise HTTPException(status_code=503, detail="Search service not initialized")
     
     try:
-        logger.info(f"Search query: {request.query[:50]}... (limit={request.limit})")
+        logger.info(f"Search query: {request.query[:50]}... (limit={request.limit}, offset={request.offset})")
         
-        results, query_time_ms = search_service.semantic_search(
+        results, total, query_time_ms = search_service.semantic_search(
             query=request.query,
             limit=request.limit,
+            offset=request.offset,
+            sort_by=request.sort_by,
             filters=request.filters
         )
         
-        logger.info(f"Found {len(results)} results in {query_time_ms:.2f}ms")
+        page = (request.offset // request.limit) + 1 if request.limit > 0 else 1
+        has_more = (request.offset + len(results)) < total
+        
+        logger.info(f"Found {len(results)} of {total} total results in {query_time_ms:.2f}ms")
         
         return SearchResponse(
             results=results,
-            total=len(results),
-            query_time_ms=query_time_ms
+            total=total,
+            page=page,
+            page_size=request.limit,
+            has_more=has_more,
+            query_time_ms=query_time_ms,
+            coverage_note="Corpus search across digitized Lebanese Official Gazette issues (2014-2025)"
         )
     
     except Exception as e:
@@ -143,7 +150,7 @@ async def get_legal_unit(unit_id: UUID):
     Get full details of a specific legal unit
     
     Returns the complete legal unit including full content, metadata,
-    and source information.
+    provenance, and source scan reference.
     """
     if search_service is None:
         raise HTTPException(status_code=503, detail="Search service not initialized")
@@ -164,7 +171,7 @@ async def get_legal_unit(unit_id: UUID):
 
 
 @app.get("/issues/{year}", response_model=IssueListResponse, tags=["Issues"])
-async def list_issues(year: int = Path(..., ge=2014, le=2025)):
+async def list_issues(year: int = Path(..., ge=1920, le=2035)):
     """
     List all gazette issues for a specific year
     
@@ -395,6 +402,28 @@ async def remove_bookmark(bookmark_id: str, user_id: str = Depends(get_current_u
     except Exception as e:
         logger.error(f"Remove bookmark error: {e}")
         raise HTTPException(500, str(e))
+
+
+@app.get("/library/bookmarks/status", tags=["Library"])
+async def check_bookmark_status(
+    legal_unit_id: str = Query(..., description="Legal unit UUID"),
+    user_id: str = Depends(get_current_user_id)
+):
+    """Check if a legal unit is bookmarked by the current user without loading the whole library"""
+    if bookmark_service is None:
+        raise HTTPException(status_code=503, detail="Bookmark service not initialized")
+    try:
+        lib = bookmark_service.get_user_library(user_id)
+        match = next((b for b in lib.get("bookmarks", []) if str(b.get("legal_unit_id")) == legal_unit_id), None)
+        return {
+            "is_bookmarked": bool(match),
+            "bookmark_id": match["id"] if match else None,
+            "folder_id": match.get("folder_id") if match else None
+        }
+    except Exception as e:
+        logger.error(f"Error checking bookmark status: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 if __name__ == "__main__":
     import uvicorn

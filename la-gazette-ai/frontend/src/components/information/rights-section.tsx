@@ -8,6 +8,7 @@ interface Right {
     title: string;
     description: string;
     source: string;
+    sourceUrl?: string;
     icon: any;
 }
 
@@ -82,9 +83,10 @@ const categories: Category[] = [
             },
             {
                 id: "education",
-                title: "Right to Education",
-                description: "Education is free generally, provided it does not violate public order.",
-                source: "Art. 10",
+                title: "Freedom of Education (حرية التعليم)",
+                description: "Education is free (unrestricted) provided it does not violate public order or morals and respects all religious confessions. This constitutional protection guarantees freedom of teaching and school establishment rather than cost-free instruction.",
+                source: "Art. 10 (Lebanese Constitution)",
+                sourceUrl: "https://lp.gov.lb/ContentRecordDetails?Id=13684",
                 icon: BookOpen
             }
         ]
@@ -102,18 +104,31 @@ export function RightsSection() {
                     </div>
 
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                        {category.rights.map((right) => (
+                        {category.rights.map((right: any) => (
                             <div
                                 key={right.id}
-                                className="flex flex-col rounded-lg border border-slate-200 bg-white p-6 transition-all hover:border-blue-200 hover:shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:hover:border-blue-900"
+                                className="flex flex-col rounded-xl border border-slate-200 bg-white p-6 transition-all hover:border-blue-200 hover:shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:hover:border-blue-900"
                             >
                                 <div className="mb-4 flex items-center justify-between">
-                                    <div className="rounded-md bg-slate-100 p-2 text-slate-600 dark:bg-slate-900 dark:text-slate-400">
+                                    <div className="rounded-md bg-slate-100 p-2 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
                                         <right.icon className="h-5 w-5" />
                                     </div>
-                                    <span className="text-xs font-mono font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded">
-                                        {right.source}
-                                    </span>
+                                    {right.sourceUrl ? (
+                                        <a
+                                            href={right.sourceUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-xs font-mono font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded hover:underline inline-flex items-center gap-1"
+                                            title="View source at Lebanese Parliament"
+                                        >
+                                            <span>{right.source}</span>
+                                            <span>↗</span>
+                                        </a>
+                                    ) : (
+                                        <span className="text-xs font-mono font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded">
+                                            {right.source}
+                                        </span>
+                                    )}
                                 </div>
 
                                 <h4 className="font-bold text-slate-900 dark:text-white mb-2">{right.title}</h4>

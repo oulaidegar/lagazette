@@ -4,6 +4,7 @@ import { ThemeProvider as NextThemesProvider } from "next-themes";
 import * as React from "react";
 
 import { AuthProvider } from "@/components/auth/auth-provider";
+import { LanguageProvider } from "@/components/layout/language-context";
 
 export function ThemeProvider({
     children,
@@ -11,7 +12,9 @@ export function ThemeProvider({
 }: React.ComponentProps<typeof NextThemesProvider>) {
     return (
         <AuthProvider>
-            <NextThemesProvider {...props}>{children}</NextThemesProvider>
+            <LanguageProvider>
+                <NextThemesProvider {...props}>{children}</NextThemesProvider>
+            </LanguageProvider>
         </AuthProvider>
     );
 }

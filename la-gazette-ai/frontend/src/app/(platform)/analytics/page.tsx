@@ -72,30 +72,47 @@ export default function AnalyticsPage() {
                     </p>
                 </div>
                 <span className="text-sm text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
-                    Data updated: 2025
+                    Data updated: Live Archive
                 </span>
+            </div>
+
+            {/* Provenance note */}
+            <div className="bg-muted/40 border border-border p-4 rounded-xl text-xs text-muted-foreground">
+                <p>
+                    <strong className="text-foreground">Methodology Note:</strong> The figures below represent verified legal units and issues indexed in the La Gazette digital database. Click any category or authority to explore the underlying gazette records in Search.
+                </p>
             </div>
 
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
-                    <h3 className="text-sm font-medium text-slate-500">Total Legal Units</h3>
+                <a
+                    href="/search"
+                    className="p-6 rounded-xl bg-card border border-border shadow-sm flex flex-col justify-between hover:border-primary/40 transition-colors group"
+                >
+                    <h3 className="text-sm font-medium text-muted-foreground group-hover:text-primary transition-colors">
+                        Total Legal Units Indexed &rarr;
+                    </h3>
                     <div className="mt-2 flex items-baseline gap-2">
-                        <p className="text-3xl font-bold text-slate-900 dark:text-white">
+                        <p className="text-3xl font-bold text-foreground">
                             {stats.total_legal_units.toLocaleString()}
                         </p>
-                        <span className="text-xs text-green-600 font-medium">+12% vs last year</span>
+                        <span className="text-xs text-muted-foreground font-medium">Verified database count</span>
                     </div>
-                </div>
-                <div className="p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
-                    <h3 className="text-sm font-medium text-slate-500">Total Issues Processed</h3>
+                </a>
+                <a
+                    href="/search"
+                    className="p-6 rounded-xl bg-card border border-border shadow-sm flex flex-col justify-between hover:border-primary/40 transition-colors group"
+                >
+                    <h3 className="text-sm font-medium text-muted-foreground group-hover:text-primary transition-colors">
+                        Total Issues Processed &rarr;
+                    </h3>
                     <div className="mt-2 flex items-baseline gap-2">
-                        <p className="text-3xl font-bold text-slate-900 dark:text-white">
+                        <p className="text-3xl font-bold text-foreground">
                             {stats.total_issues.toLocaleString()}
                         </p>
-                        <span className="text-xs text-slate-400 font-medium">Archive 2014-2025</span>
+                        <span className="text-xs text-muted-foreground font-medium">Official Gazette issues</span>
                     </div>
-                </div>
+                </a>
             </div>
 
             {/* Row 1: Activity Pulses (Heatmap) */}

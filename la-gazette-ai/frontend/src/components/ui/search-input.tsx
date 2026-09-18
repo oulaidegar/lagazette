@@ -3,23 +3,39 @@
 import { useEffect, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/components/layout/language-context";
+import { Button } from "@/components/ui/button";
 
 interface SearchInputProps {
     className?: string;
     placeholder?: string;
     autoFocus?: boolean;
     basePath?: string;
+    showSubmitButton?: boolean;
+    onSearch?: (query: string) => void;
 }
 
-export function SearchInput({ className, placeholder = "Search for laws, decrees...", autoFocus = false, basePath = "/search" }: SearchInputProps) {
+export function SearchInput({ 
+    className, 
+    placeholder, 
+    autoFocus = false, 
+    basePath = "/search",
+    showSubmitButton = true,
+    onSearch
+}: SearchInputProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const initialQuery = searchParams.get("q") || "";
+    const urlQuery = searchParams.get("q") || "";
+    const { t, dir } = useLanguage();
 
-    const [query, setQuery] = useState(initialQuery);
+    const [query, setQuery] = useState(urlQuery);
     const inputRef = useRef<HTMLInputElement>(null);
+
+    // Sync input state whenever URL query changes (e.g. Back/Forward button)
+    useEffect(() => {
+        setQuery(urlQuery);
+    }, [urlQuery]);
 
     useEffect(() => {
         if (autoFocus && inputRef.current) {
@@ -29,48 +45,80 @@ export function SearchInput({ className, placeholder = "Search for laws, decrees
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!query.trim()) return;
-        router.push(`${basePath}?q=${encodeURIComponent(query)}`);
+        const trimmed = query.trim();
+        if (onSearch) {
+            onSearch(trimmed);
+            return;
+        }
+        if (trimmed) {
+            router.push(`${basePath}?q=${encodeURIComponent(trimmed)}`);
+        } else {
+            router.push(basePath);
+        }
     };
 
     const clearSearch = () => {
         setQuery("");
         inputRef.current?.focus();
+        if (onSearch) {
+            onSearch("");
+        } else if (urlQuery) {
+            router.push(basePath);
+        }
     };
 
+    const resolvedPlaceholder = placeholder || t("searchPlaceholder");
+
     return (
-        <form onSubmit={handleSearch} className={cn("relative w-full max-w-2xl group", className)}>
-            <div className="relative flex items-center">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
+        <form onSubmit={handleSearch} className={cn("w-full relative group", className)} role="search">
+            <label htmlFor="gazette-search-input" className="sr-only">
+                {t("searchPlaceholder")}
+            </label>
+            <div className="relative flex items-center gap-2">
+                <div className="relative flex-1">
+                    <Search className={`absolute top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground transition-colors ${
+                        dir === "rtl" ? "right-4" : "left-4"
+                    }`} />
 
-                <input
-                    ref={inputRef}
-                    type="text"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    className={cn(
-                        "w-full h-14 pl-12 pr-12 rounded-2xl border border-gray-200 bg-white",
-                        "shadow-sm hover:shadow-md focus:shadow-lg transition-all duration-300",
-                        "text-lg placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500",
-                        "dark:bg-slate-900 dark:border-slate-800 dark:text-white"
-                    )}
-                    placeholder={placeholder}
-                />
+                    <input
+                        id="gazette-search-input"
+                        ref={inputRef}
+                        type="search"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        className={cn(
+                            "w-full h-13 rounded-xl border border-input bg-card text-foreground",
+                            "shadow-xs hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all",
+                            "text-base placeholder:text-muted-foreground focus:outline-none",
+                            dir === "rtl" ? "pr-12 pl-10 text-right" : "pl-12 pr-10 text-left"
+                        )}
+                        placeholder={resolvedPlaceholder}
+                    />
 
-                <AnimatePresence>
                     {query && (
-                        <motion.button
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.8 }}
+                        <button
                             type="button"
                             onClick={clearSearch}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+                            className={`absolute top-1/2 -translate-y-1/2 p-1.5 rounded-full hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors ${
+                                dir === "rtl" ? "left-3" : "right-3"
+                            }`}
+                            aria-label="Clear search input"
                         >
-                            <X className="h-4 w-4 text-gray-400" />
-                        </motion.button>
+                            <X className="h-4 w-4" />
+                        </button>
                     )}
-                </AnimatePresence>
+                </div>
+
+                {showSubmitButton && (
+                    <Button 
+                        type="submit" 
+                        size="lg" 
+                        className="h-13 px-6 rounded-xl font-semibold gap-2 shadow-xs shrink-0"
+                    >
+                        <Search className="h-4 w-4" />
+                        <span>{t("searchButton")}</span>
+                    </Button>
+                )}
             </div>
         </form>
     );

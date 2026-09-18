@@ -24,7 +24,7 @@ const getApiBaseUrl = () => {
     }
     
     // Local fallback
-    return "http://localhost:8000";
+    return "http://127.0.0.1:8000";
 };
 
 const API_BASE_URL = getApiBaseUrl();
@@ -50,10 +50,13 @@ export interface LegalUnitSummary {
     is_table: boolean;
     content_preview: string;
     similarity: number;
+    match_type?: "exact_reference" | "semantic" | "browse";
     source: {
         issue_number: number;
         year: number;
         page_number: number | null;
+        publication_date?: string | null;
+        date_precision?: "exact" | "year_only" | "unverified";
     };
 }
 
@@ -61,12 +64,17 @@ export interface LegalUnitDetail extends LegalUnitSummary {
     content: string;
     table_data: any | null;
     is_supplement: boolean;
+    source_pdf_url?: string | null;
 }
 
 export interface SearchResponse {
     results: LegalUnitSummary[];
     total: number;
+    page: number;
+    page_size: number;
+    has_more: boolean;
     query_time_ms: number;
+    coverage_note?: string;
 }
 
 export interface StatsResponse {
@@ -133,11 +141,17 @@ export interface TrendItem {
 }
 
 export const api = {
-    async search(query: string, limit: number = 10, filters?: SearchFilters): Promise<SearchResponse> {
+    async search(
+        query: string, 
+        limit: number = 10, 
+        filters?: SearchFilters, 
+        offset: number = 0, 
+        sort_by: string = "relevance"
+    ): Promise<SearchResponse> {
         const response = await fetch(`${API_BASE_URL}/search`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ query, limit, filters }),
+            body: JSON.stringify({ query, limit, filters, offset, sort_by }),
             cache: "no-store",
         });
 
@@ -269,6 +283,18 @@ export const api = {
             headers: { Authorization: `Bearer ${token}` },
         });
         if (!response.ok) throw new Error("Failed to delete bookmark");
+        return response.json();
+    },
+
+    async checkBookmarkStatus(legalUnitId: string, token: string): Promise<{ is_bookmarked: boolean; bookmark_id: string | null; folder_id: string | null }> {
+        const response = await fetch(`${API_BASE_URL}/library/bookmarks/status?legal_unit_id=${legalUnitId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+            cache: "no-store",
+        });
+        if (!response.ok) {
+            // Fallback gracefully
+            return { is_bookmarked: false, bookmark_id: null, folder_id: null };
+        }
         return response.json();
     }
 };

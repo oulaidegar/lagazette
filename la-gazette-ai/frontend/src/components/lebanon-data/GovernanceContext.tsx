@@ -41,6 +41,16 @@ export default function GovernanceContext() {
                 </p>
             </div>
 
+            {/* Indicator Provenance Disclaimer */}
+            <div className="p-4 rounded-xl border border-border bg-muted/40 text-xs text-muted-foreground leading-relaxed flex items-start gap-3">
+                <span className="font-semibold text-foreground shrink-0 uppercase tracking-wider text-[11px] px-2 py-0.5 rounded bg-muted">
+                    External Index
+                </span>
+                <span>
+                    These indicators are compiled from non-governmental international research indices (World Justice Project, Reporters Without Borders, and Freedom House) for macro-contextual analysis. They reflect third-party civil assessments, not official publications of the Lebanese Republic.
+                </span>
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
                 {/* Radar Chart */}

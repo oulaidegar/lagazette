@@ -14,23 +14,27 @@ export default function LibraryPage() {
     const router = useRouter();
     const [library, setLibrary] = useState<{ folders: any[]; bookmarks: any[] } | null>(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
     const [newFolderName, setNewFolderName] = useState('');
     const [isCreatingFolder, setIsCreatingFolder] = useState(false);
 
     useEffect(() => {
         if (!authLoading && !user) {
-            router.push('/login');
+            router.push('/login?redirect=/library');
         }
     }, [user, authLoading, router]);
 
     const fetchLibrary = async () => {
         if (!session?.access_token) return;
+        setLoading(true);
+        setError(null);
         try {
             const data = await api.getLibrary(session.access_token);
             setLibrary(data);
-        } catch (e) {
-            console.error(e);
+        } catch (e: any) {
+            console.error("Failed to load library", e);
+            setError(e?.message || "Failed to load library items.");
         } finally {
             setLoading(false);
         }
@@ -39,8 +43,10 @@ export default function LibraryPage() {
     useEffect(() => {
         if (user && session) {
             fetchLibrary();
+        } else if (!authLoading && !user) {
+            setLoading(false);
         }
-    }, [user, session]);
+    }, [user, session, authLoading]);
 
     const handleCreateFolder = async () => {
         if (!newFolderName.trim() || !session) return;
@@ -77,10 +83,44 @@ export default function LibraryPage() {
     };
 
     if (authLoading || loading) {
-        return <div className="p-8 text-center">Loading library...</div>;
+        return (
+            <div className="container mx-auto px-4 py-20 max-w-4xl text-center">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4" />
+                <p className="text-muted-foreground">Loading your personal library...</p>
+            </div>
+        );
     }
 
-    if (!library) return null;
+    if (!user) {
+        return (
+            <div className="container mx-auto px-4 py-20 max-w-md text-center">
+                <Bookmark className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h1 className="text-2xl font-bold mb-2">Sign in to view your Library</h1>
+                <p className="text-muted-foreground mb-6">
+                    Save laws, decrees, and research files for quick reference.
+                </p>
+                <Link href="/login?redirect=/library">
+                    <Button>Sign In</Button>
+                </Link>
+            </div>
+        );
+    }
+
+    if (error || !library) {
+        return (
+            <div className="container mx-auto px-4 py-20 max-w-lg text-center">
+                <div className="bg-destructive/10 text-destructive p-4 rounded-lg mb-6 text-sm">
+                    {error || "Unable to retrieve library records at this time."}
+                </div>
+                <div className="flex gap-4 justify-center">
+                    <Button onClick={fetchLibrary}>Retry</Button>
+                    <Link href="/search">
+                        <Button variant="outline">Browse Gazette</Button>
+                    </Link>
+                </div>
+            </div>
+        );
+    }
 
     const filteredBookmarks = selectedFolder
         ? library.bookmarks.filter((b) => b.folder_id === selectedFolder)

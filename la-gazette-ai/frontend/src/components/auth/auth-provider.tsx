@@ -9,7 +9,7 @@ type AuthContextType = {
     user: User | null;
     session: Session | null;
     loading: boolean;
-    signInWithGoogle: () => Promise<void>;
+    signInWithGoogle: (targetRedirect?: string) => Promise<void>;
     signInWithPassword: (email: string, password: string) => Promise<void>;
     signUp: (email: string, password: string, fullName: string) => Promise<void>;
     signOut: () => Promise<void>;
@@ -34,29 +34,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const router = useRouter();
 
     useEffect(() => {
-        // Check active session
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            setSession(session);
-            setUser(session?.user ?? null);
-            setLoading(false);
-        });
+        // Check active session safely
+        supabase.auth
+            .getSession()
+            .then(({ data: { session } }) => {
+                setSession(session);
+                setUser(session?.user ?? null);
+                setLoading(false);
+            })
+            .catch((err) => {
+                console.warn("Supabase auth session unavailable:", err?.message || err);
+                setSession(null);
+                setUser(null);
+                setLoading(false);
+            });
 
         // Listen for changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            setSession(session);
-            setUser(session?.user ?? null);
-            setLoading(false);
-            router.refresh();
-        });
+        try {
+            const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+                setSession(session);
+                setUser(session?.user ?? null);
+                setLoading(false);
+                router.refresh();
+            });
 
-        return () => subscription.unsubscribe();
+            return () => subscription.unsubscribe();
+        } catch (e) {
+            console.warn("Supabase onAuthStateChange unavailable:", e);
+        }
     }, [router]);
 
-    const signInWithGoogle = async () => {
+    const signInWithGoogle = async (targetRedirect?: string) => {
+        const next = targetRedirect || '/';
         await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: `${window.location.origin}/auth/callback`,
+                redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
             },
         });
     };

@@ -37,19 +37,11 @@ export function BookmarkButton({
 
         const checkStatus = async () => {
             try {
-                // Fetch library to check status. 
-                // OPTIMIZATION TODO: Create specific endpoint for checking status
-                const lib = await api.getLibrary(session.access_token);
-                const match = lib.bookmarks.find((b: any) => b.legal_unit_id === legalUnitId);
-                if (match) {
-                    setIsBookmarked(true);
-                    setBookmarkId(match.id);
-                } else {
-                    setIsBookmarked(false);
-                    setBookmarkId(null);
-                }
+                const res = await api.checkBookmarkStatus(legalUnitId, session.access_token);
+                setIsBookmarked(res.is_bookmarked);
+                setBookmarkId(res.bookmark_id);
             } catch (e) {
-                console.error(e);
+                console.error("Failed to check bookmark status", e);
             } finally {
                 setLoading(false);
             }
@@ -63,7 +55,8 @@ export function BookmarkButton({
         e.stopPropagation();
 
         if (!user) {
-            router.push('/login');
+            const currentPath = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '/';
+            router.push(`/login?redirect=${encodeURIComponent(currentPath)}`);
             return;
         }
 
@@ -91,9 +84,9 @@ export function BookmarkButton({
         return (
             <Button size={size} variant={variant} disabled className={className}>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                {showText && <span className="ml-2">Done</span>}
+                {showText && <span className="ml-2 text-xs">...</span>}
             </Button>
-        )
+        );
     }
 
     return (
@@ -103,8 +96,13 @@ export function BookmarkButton({
             onClick={toggleBookmark}
             className={className}
             disabled={toggling}
+            aria-label={isBookmarked ? 'Remove bookmark' : 'Bookmark this document'}
         >
-            <Bookmark className={`h-4 w-4 ${isBookmarked ? 'fill-current' : ''}`} />
+            {toggling ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+                <Bookmark className={`h-4 w-4 ${isBookmarked ? 'fill-current text-primary' : ''}`} />
+            )}
             {showText && <span className="ml-2">{isBookmarked ? 'Saved' : 'Save'}</span>}
         </Button>
     );

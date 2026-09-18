@@ -1,20 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useAuth } from '@/components/auth/auth-provider';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 
-export default function LoginPage() {
+function LoginForm() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const { signInWithPassword, signInWithGoogle } = useAuth();
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const redirectUrl = searchParams.get('redirect') || searchParams.get('next') || '/';
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -23,11 +25,21 @@ export default function LoginPage() {
 
         try {
             await signInWithPassword(email, password);
-            router.push('/'); // Redirect to home or previous page
+            const safeRedirect = redirectUrl.startsWith('/') ? redirectUrl : '/';
+            router.push(safeRedirect);
         } catch (err: any) {
             setError(err.message || 'Failed to sign in');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleGoogleSignIn = async () => {
+        try {
+            const safeRedirect = redirectUrl.startsWith('/') ? redirectUrl : '/';
+            await signInWithGoogle(safeRedirect);
+        } catch (err: any) {
+            setError(err.message || 'Google sign-in failed');
         }
     };
 
@@ -97,7 +109,7 @@ export default function LoginPage() {
                         variant="outline"
                         type="button"
                         className="w-full"
-                        onClick={signInWithGoogle}
+                        onClick={handleGoogleSignIn}
                     >
                         Google
                     </Button>
@@ -114,5 +126,17 @@ export default function LoginPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function LoginPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-black">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+        }>
+            <LoginForm />
+        </Suspense>
     );
 }

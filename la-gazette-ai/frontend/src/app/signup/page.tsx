@@ -112,7 +112,7 @@ export default function SignupPage() {
                         variant="outline"
                         type="button"
                         className="w-full"
-                        onClick={signInWithGoogle}
+                        onClick={() => signInWithGoogle()}
                     >
                         Google
                     </Button>
